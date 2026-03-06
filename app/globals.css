@@ -1,0 +1,296 @@
+/* app/globals.css – Premium Theme System with Smooth Transitions */
+
+/* 1. Import Tailwind CSS v4 */
+@import 'tailwindcss';
+
+/* 2. Define light theme variables (default) */
+:root {
+  /* Core colors – vibrant, tech‑inspired */
+  --background: 250 250 255;      /* soft white */
+  --foreground: 10 10 20;          /* deep navy for text */
+  --primary: 0 150 255;            /* electric blue */
+  --primary-foreground: 255 255 255;
+  --secondary: 240 240 250;         /* light lavender */
+  --secondary-foreground: 30 30 50;
+  --accent: 150 0 255;              /* vibrant purple */
+  --accent-foreground: 255 255 255;
+  --muted: 220 220 235;
+  --muted-foreground: 60 70 90;
+  --card: 255 255 255 / 0.7;        /* semi‑transparent white */
+  --card-foreground: 10 10 20;
+  --border: 200 210 230;
+  --ring: 0 150 255;
+
+  /* Glow effects */
+  --glow-primary: 0 150 255 / 0.3;
+  --glow-accent: 150 0 255 / 0.3;
+
+  /* Gradient colors for text animations */
+  --gradient-start: #0096ff;
+  --gradient-mid: #9600ff;
+  --gradient-end: #ff60b0;
+}
+
+/* 3. Dark theme overrides – applied when .dark class is present */
+.dark {
+  --background: 10 10 20;           /* deep space blue */
+  --foreground: 245 245 255;         /* off‑white with blue tint */
+  --primary: 0 180 255;              /* brighter electric blue */
+  --primary-foreground: 255 255 255;
+  --secondary: 30 30 50;              /* deep navy */
+  --secondary-foreground: 200 220 255;
+  --accent: 180 0 255;                /* vibrant purple */
+  --accent-foreground: 255 255 255;
+  --muted: 60 70 90;
+  --muted-foreground: 180 190 210;
+  --card: 20 25 40 / 0.8;             /* semi‑transparent dark blue */
+  --card-foreground: 230 240 255;
+  --border: 40 50 70;
+  --ring: 0 180 255;
+
+  --glow-primary: 0 150 255 / 0.5;
+  --glow-accent: 150 0 255 / 0.5;
+
+  --gradient-start: #00b4ff;
+  --gradient-mid: #b400ff;
+  --gradient-end: #ff60b0;
+}
+
+/* 4. Smooth transition for theme changes – applied to all theme‑sensitive properties */
+* {
+  transition: background-color 0.3s ease,
+              border-color 0.2s ease,
+              color 0.2s ease,
+              box-shadow 0.2s ease;
+}
+
+/* 5. Extend Tailwind's theme with our custom variables */
+@theme {
+  --color-background: rgb(var(--background));
+  --color-foreground: rgb(var(--foreground));
+  --color-primary: rgb(var(--primary));
+  --color-primary-foreground: rgb(var(--primary-foreground));
+  --color-secondary: rgb(var(--secondary));
+  --color-secondary-foreground: rgb(var(--secondary-foreground));
+  --color-accent: rgb(var(--accent));
+  --color-accent-foreground: rgb(var(--accent-foreground));
+  --color-muted: rgb(var(--muted));
+  --color-muted-foreground: rgb(var(--muted-foreground));
+  --color-card: rgba(var(--card));
+  --color-card-foreground: rgb(var(--card-foreground));
+  --color-border: rgb(var(--border));
+  --color-ring: rgb(var(--ring));
+
+  --font-family-sans: var(--font-inter), system-ui, sans-serif;
+}
+
+/* 6. Base layer styles */
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-family-sans);
+  }
+
+  /* Focus outline for accessibility */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+/* 7. Premium utility classes – all theme‑aware */
+@layer utilities {
+  /* Glassmorphism effect – matte premium */
+  .glass {
+    background-color: rgba(var(--card) / 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Responsive section padding */
+  .section-padding {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+  @media (min-width: 768px) {
+    .section-padding {
+      padding-top: 6rem;
+      padding-bottom: 6rem;
+    }
+  }
+
+  /* Custom container */
+  .container-custom {
+    max-width: 80rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  @media (min-width: 640px) {
+    .container-custom {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .container-custom {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+
+  /* Hide scrollbar for carousels */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;     /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;             /* Chrome, Safari, Opera */
+  }
+
+  /* 3D perspective utilities */
+  .perspective {
+    perspective: 2000px;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  /* Glow utilities for AI‑style elements */
+  .glow-primary {
+    box-shadow: 0 0 30px rgb(var(--glow-primary));
+  }
+  .glow-accent {
+    box-shadow: 0 0 30px rgb(var(--glow-accent));
+  }
+
+  /* ===== Text Enhancements ===== */
+  /* Gradient text – static (uses theme gradient colors) */
+  .text-gradient-primary {
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-mid));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .text-gradient-accent {
+    background: linear-gradient(135deg, var(--gradient-mid), var(--gradient-end));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Animated gradient text */
+  @keyframes textGradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  .text-gradient-animated {
+    background: linear-gradient(90deg, var(--gradient-start), var(--gradient-mid), var(--gradient-end), var(--gradient-start));
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: textGradientShift 6s ease infinite;
+  }
+
+  /* 3D text effect (simulated with shadows) */
+  .text-3d {
+    text-shadow: 
+      1px 1px 0 rgba(var(--primary) / 0.3),
+      2px 2px 0 rgba(var(--primary) / 0.3),
+      3px 3px 0 rgba(var(--accent) / 0.2),
+      4px 4px 0 rgba(var(--accent) / 0.1);
+    transform: translateZ(0);
+  }
+
+  /* Futuristic glow text */
+  .text-glow {
+    text-shadow: 0 0 10px rgba(var(--primary) / 0.5), 0 0 20px rgba(var(--accent) / 0.3);
+  }
+
+  /* Premium combination */
+  .text-premium {
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-mid), var(--gradient-end));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 2px 2px 10px rgba(var(--primary) / 0.3), 4px 4px 20px rgba(var(--accent) / 0.2);
+    animation: textGradientShift 8s ease infinite;
+    background-size: 300% 100%;
+  }
+
+  /* ===== Animated Borders ===== */
+  .gradient-border {
+    position: relative;
+    border: none;
+  }
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(90deg, var(--gradient-start), var(--gradient-mid), var(--gradient-end));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    background-size: 200% 200%;
+    animation: shiftGradient 4s linear infinite;
+  }
+
+  /* ===== Background Animations ===== */
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+  .animate-pulse-slow {
+    animation: pulse-slow 3s ease-in-out infinite;
+  }
+
+  @keyframes shiftGradient {
+    0% { background-position: 0% 0%; }
+    25% { background-position: 50% 50%; }
+    50% { background-position: 100% 100%; }
+    75% { background-position: 50% 50%; }
+    100% { background-position: 0% 0%; }
+  }
+  .animate-gradient-shift {
+    background-size: 200% 200%;
+    animation: shiftGradient 20s ease infinite;
+  }
+
+  /* Additional text readability enhancement */
+  .text-readable {
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  .dark .text-readable {
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  }
+}
