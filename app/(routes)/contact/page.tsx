@@ -2,13 +2,48 @@ import { Container } from '@/components/ui/Container';
 import { FadeIn } from '@/components/animations/FadeIn';
 import { ContactForm } from '@/components/sections/ContactForm';
 import { Mail, Phone, MapPin } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
 
 export const metadata = {
   title: 'Contact Us',
   description: 'Get in touch with SiddhiAI. Let’s discuss how AI can transform your marketing.',
 };
 
-export default function ContactPage() {
+// Fetch site settings on the server
+async function getSiteSettings() {
+  const supabase = await createClient();
+  const tenantId = process.env.NEXT_PUBLIC_TENANT_ID;
+  if (!tenantId) {
+    console.warn('NEXT_PUBLIC_TENANT_ID not set, using default contact info');
+    return null;
+  }
+  const { data, error } = await supabase
+    .from('site_settings')
+    .select('contact_email, social_links')
+    .eq('tenant_id', tenantId)
+    .single();
+  if (error) {
+    console.error('Error fetching site settings:', error);
+    return null;
+  }
+  return data;
+}
+
+export default async function ContactPage() {
+  const settings = await getSiteSettings();
+
+  // Fallback values
+  const email = settings?.contact_email || 'hello@siddhi.ai';
+  // We could also get phone and address from settings if you add columns
+  const phone = '+91 98765 43210';
+  const address = (
+    <>
+      123, AI Street, Tech Park<br />
+      Bengaluru, Karnataka 560001<br />
+      India
+    </>
+  );
+
   return (
     <>
       <section className="section-padding bg-gradient-to-b from-primary/10 to-transparent">
@@ -45,8 +80,8 @@ export default function ContactPage() {
                       <Mail className="w-5 h-5 text-primary mt-1" />
                       <div>
                         <p className="font-medium">Email</p>
-                        <a href="mailto:hello@siddhi.ai" className="text-muted-foreground hover:text-primary transition-colors">
-                          hello@siddhi.ai
+                        <a href={`mailto:${email}`} className="text-muted-foreground hover:text-primary transition-colors">
+                          {email}
                         </a>
                       </div>
                     </div>
@@ -54,8 +89,8 @@ export default function ContactPage() {
                       <Phone className="w-5 h-5 text-primary mt-1" />
                       <div>
                         <p className="font-medium">Phone</p>
-                        <a href="tel:+919876543210" className="text-muted-foreground hover:text-primary transition-colors">
-                          +91 98765 43210
+                        <a href={`tel:${phone.replace(/\s/g, '')}`} className="text-muted-foreground hover:text-primary transition-colors">
+                          {phone}
                         </a>
                       </div>
                     </div>
@@ -63,11 +98,7 @@ export default function ContactPage() {
                       <MapPin className="w-5 h-5 text-primary mt-1" />
                       <div>
                         <p className="font-medium">Office</p>
-                        <p className="text-muted-foreground">
-                          123, AI Street, Tech Park<br />
-                          Bengaluru, Karnataka 560001<br />
-                          India
-                        </p>
+                        <p className="text-muted-foreground">{address}</p>
                       </div>
                     </div>
                   </div>

@@ -5,21 +5,49 @@ import { ParallaxSection } from '@/components/animations/ParallaxSection';
 import { Button3D } from '@/components/ui/Button3D';
 import Image from 'next/image';
 import { Card } from '@/components/ui/Card';
-import { projects } from '@/lib/constants/projects';
+import { logError } from '@/lib/error-handling';
 
 type Params = Promise<{ slug: string }>;
 
+// Fetch project data on the server
+async function getProjectBySlug(slug: string) {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/projects?slug=eq.${slug}&select=*`,
+      {
+        headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
+        next: { tags: [`project-${slug}`] }, // for on-demand revalidation
+      }
+    );
+    if (!res.ok) {
+      throw new Error(`Failed to fetch project: ${res.status}`);
+    }
+    const data = await res.json();
+    // The query returns an array; we expect exactly one
+    return data[0] || null;
+  } catch (error) {
+    console.error('Error fetching project:', error);
+    if (process.env.NODE_ENV === 'production') {
+      await logError({ message: 'Project fetch failed', context: { slug, error } });
+    }
+    return null;
+  }
+}
+
 export default async function WorkDetailPage({ params }: { params: Params }) {
   const { slug } = await params;
-  const project = projects.find(p => p.slug === slug);
-  if (!project) notFound();
+  const project = await getProjectBySlug(slug);
+
+  if (!project) {
+    notFound();
+  }
 
   return (
     <>
       {/* Hero */}
       <section className="relative h-[70vh] min-h-[600px] flex items-end pb-16">
         <Image
-          src={project.image}
+          src={project.image || '/images/placeholder.jpg'}
           alt={project.title}
           fill
           className="object-cover"
@@ -37,40 +65,48 @@ export default async function WorkDetailPage({ params }: { params: Params }) {
         </Container>
       </section>
 
-      {/* Challenge & Solution */}
-      <ParallaxSection speed={0.2} className="section-padding">
-        <Container>
-          <div className="grid md:grid-cols-2 gap-12">
-            <FadeIn>
-              <h2 className="text-2xl font-semibold mb-4 text-gradient-primary">The Challenge</h2>
-              <p className="text-muted-foreground text-lg">{project.challenge}</p>
-            </FadeIn>
-            <FadeIn delay={0.2}>
-              <h2 className="text-2xl font-semibold mb-4 text-gradient-accent">Our Solution</h2>
-              <p className="text-muted-foreground text-lg">{project.solution}</p>
-            </FadeIn>
-          </div>
-        </Container>
-      </ParallaxSection>
+      {/* Challenge & Solution (only if present) */}
+      {(project.challenge || project.solution) && (
+        <ParallaxSection speed={0.2} className="section-padding">
+          <Container>
+            <div className="grid md:grid-cols-2 gap-12">
+              {project.challenge && (
+                <FadeIn>
+                  <h2 className="text-2xl font-semibold mb-4 text-gradient-primary">The Challenge</h2>
+                  <p className="text-muted-foreground text-lg">{project.challenge}</p>
+                </FadeIn>
+              )}
+              {project.solution && (
+                <FadeIn delay={0.2}>
+                  <h2 className="text-2xl font-semibold mb-4 text-gradient-accent">Our Solution</h2>
+                  <p className="text-muted-foreground text-lg">{project.solution}</p>
+                </FadeIn>
+              )}
+            </div>
+          </Container>
+        </ParallaxSection>
+      )}
 
-      {/* Results */}
-      <section className="section-padding bg-secondary/50">
-        <Container>
-          <FadeIn className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gradient-primary">Key Results</h2>
-          </FadeIn>
-          <div className="grid md:grid-cols-3 gap-8">
-            {project.metrics.map((result, i) => (
-              <FadeIn key={i} delay={i * 0.1}>
-                <Card className="p-8 text-center gradient-border">
-                  <p className="text-4xl font-bold text-glow mb-2">{result.value}</p>
-                  <p className="text-lg text-muted-foreground">{result.label}</p>
-                </Card>
-              </FadeIn>
-            ))}
-          </div>
-        </Container>
-      </section>
+      {/* Results (if metrics exist) */}
+      {project.metrics && project.metrics.length > 0 && (
+        <section className="section-padding bg-secondary/50">
+          <Container>
+            <FadeIn className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gradient-primary">Key Results</h2>
+            </FadeIn>
+            <div className="grid md:grid-cols-3 gap-8">
+              {project.metrics.map((result: any, i: number) => (
+                <FadeIn key={i} delay={i * 0.1}>
+                  <Card className="p-8 text-center gradient-border">
+                    <p className="text-4xl font-bold text-glow mb-2">{result.value}</p>
+                    <p className="text-lg text-muted-foreground">{result.label}</p>
+                  </Card>
+                </FadeIn>
+              ))}
+            </div>
+          </Container>
+        </section>
+      )}
 
       {/* Testimonial (if available) */}
       {project.testimonial && (
@@ -105,6 +141,23 @@ export default async function WorkDetailPage({ params }: { params: Params }) {
   );
 }
 
+// Generate static paths at build time
 export async function generateStaticParams() {
-  return projects.map((project) => ({ slug: project.slug }));
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/projects?select=slug`,
+      {
+        headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
+      }
+    );
+    if (!res.ok) {
+      console.error('Failed to fetch slugs for static generation');
+      return [];
+    }
+    const projects = await res.json();
+    return projects.map((p: any) => ({ slug: p.slug }));
+  } catch (error) {
+    console.error('Error generating static params:', error);
+    return []; // Fallback to no pre‑rendered pages
+  }
 }

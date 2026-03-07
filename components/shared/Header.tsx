@@ -1,12 +1,15 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Menu, X, Sun, Moon } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'next-themes';
+import { useSite } from '@/lib/context/SiteContext';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -24,7 +27,24 @@ export function Header() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
-  // After mounting, we can safely show theme-dependent UI
+  // Get site settings
+  let siteSettings;
+  try {
+    siteSettings = useSite();
+  } catch {
+    // If context not available (should not happen), use fallback
+    siteSettings = {
+      settings: {
+        logo_url: null,
+        site_title: 'SiddhiAI',
+      },
+      isLoading: false,
+      error: null,
+    };
+  }
+
+  const { settings, isLoading } = siteSettings;
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -37,6 +57,22 @@ export function Header() {
 
   useEffect(() => setIsMobileMenuOpen(false), [pathname]);
 
+  // Logo/image element
+  const logoElement = !isLoading && settings?.logo_url ? (
+    <Image
+      src={settings.logo_url}
+      alt={settings?.site_title || 'SiddhiAI'}
+      width={120}
+      height={40}
+      className="h-10 w-auto object-contain"
+      priority
+    />
+  ) : (
+    <span className="text-2xl font-bold text-primary">
+      {settings?.site_title || 'SiddhiAI'}
+    </span>
+  );
+
   return (
     <header
       className={cn(
@@ -45,9 +81,10 @@ export function Header() {
       )}
     >
       <div className="container-custom flex items-center justify-between">
-        <Link href="/" className="text-2xl font-bold text-primary">
-          SiddhiAI
+        <Link href="/" className="flex items-center">
+          {logoElement}
         </Link>
+
         <nav className="hidden md:flex items-center space-x-8">
           {navLinks.map((link) => (
             <Link
@@ -62,6 +99,7 @@ export function Header() {
             </Link>
           ))}
         </nav>
+
         <div className="hidden md:flex items-center space-x-4">
           <Button
             variant="ghost"
@@ -72,13 +110,14 @@ export function Header() {
             {mounted ? (
               theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />
             ) : (
-              <div className="w-5 h-5" /> // Placeholder to match server render
+              <div className="w-5 h-5" />
             )}
           </Button>
           <Button href="/contact" size="sm">
             Get Started
           </Button>
         </div>
+
         <div className="flex items-center space-x-4 md:hidden">
           <Button
             variant="ghost"
@@ -102,6 +141,7 @@ export function Header() {
           </Button>
         </div>
       </div>
+
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div

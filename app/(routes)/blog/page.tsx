@@ -4,32 +4,89 @@ import { Card } from '@/components/ui/Card';
 import { Button3D } from '@/components/ui/Button3D';
 import Image from 'next/image';
 import Link from 'next/link';
+import { logError } from '@/lib/error-handling';
 
 export const metadata = {
   title: 'Blog',
   description: 'Insights and updates from the SiddhiAI team.',
 };
 
-const posts = [
-  {
-    slug: 'future-of-ai-marketing',
-    title: 'The Future of AI in Marketing: Trends for 2026',
-    excerpt: 'Explore how AI is reshaping digital marketing and what to expect in the coming year.',
-    image: '/images/blog/ai-future.jpg',
-    date: '2026-03-01',
-    author: 'Arjun Mehta',
-  },
-  {
-    slug: 'seo-changes-2026',
-    title: 'SEO in 2026: What’s Changed and How to Adapt',
-    excerpt: 'Search engines are evolving. Learn the latest strategies to stay ahead.',
-    image: '/images/blog/seo-2026.jpg',
-    date: '2026-02-15',
-    author: 'Priya Sharma',
-  },
-];
+// Fetch published blog posts from Supabase
+async function getBlogPosts() {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/blog_posts?select=*&published=eq.true&order=created_at.desc`,
+      {
+        headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
+        next: { tags: ['blog'] }, // for on‑demand revalidation
+      }
+    );
+    if (!res.ok) {
+      throw new Error(`Failed to fetch blog posts: ${res.status}`);
+    }
+    return await res.json();
+  } catch (error) {
+    console.error('Error fetching blog posts:', error);
+    if (process.env.NODE_ENV === 'production') {
+      await logError({ message: 'Blog posts fetch failed', context: { error } });
+    }
+    return null; // indicates error
+  }
+}
 
-export default function BlogPage() {
+export default async function BlogPage() {
+  const posts = await getBlogPosts();
+
+  // Error state
+  if (!posts) {
+    return (
+      <>
+        <section className="section-padding bg-gradient-to-b from-primary/10 to-transparent">
+          <Container className="text-center">
+            <FadeIn>
+              <h1 className="text-5xl md:text-6xl font-bold mb-6 text-gradient-animated text-glow">
+                Blog
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                Thoughts, insights, and updates from the SiddhiAI team.
+              </p>
+            </FadeIn>
+          </Container>
+        </section>
+        <section className="section-padding">
+          <Container className="text-center">
+            <p className="text-muted-foreground">Unable to load blog posts at this time.</p>
+          </Container>
+        </section>
+      </>
+    );
+  }
+
+  // Empty state
+  if (posts.length === 0) {
+    return (
+      <>
+        <section className="section-padding bg-gradient-to-b from-primary/10 to-transparent">
+          <Container className="text-center">
+            <FadeIn>
+              <h1 className="text-5xl md:text-6xl font-bold mb-6 text-gradient-animated text-glow">
+                Blog
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                Thoughts, insights, and updates from the SiddhiAI team.
+              </p>
+            </FadeIn>
+          </Container>
+        </section>
+        <section className="section-padding">
+          <Container className="text-center">
+            <p className="text-muted-foreground">No blog posts yet.</p>
+          </Container>
+        </section>
+      </>
+    );
+  }
+
   return (
     <>
       <section className="section-padding bg-gradient-to-b from-primary/10 to-transparent">
@@ -48,20 +105,26 @@ export default function BlogPage() {
       <section className="section-padding">
         <Container>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {posts.map((post, index) => (
+            {posts.map((post: any, index: number) => (
               <FadeIn key={post.slug} delay={index * 0.1}>
                 <Link href={`/blog/${post.slug}`}>
                   <Card className="overflow-hidden h-full gradient-border hover:scale-105 transition-transform">
                     <div className="relative h-48">
                       <Image
-                        src={post.image}
+                        src={post.featured_image || '/images/blog/placeholder.jpg'}
                         alt={post.title}
                         fill
                         className="object-cover"
                       />
                     </div>
                     <div className="p-6">
-                      <p className="text-sm text-muted-foreground mb-2">{post.date}</p>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {new Date(post.created_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </p>
                       <h3 className="text-xl font-semibold mb-2 line-clamp-2 text-gradient-primary">
                         {post.title}
                       </h3>
